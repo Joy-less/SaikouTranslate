@@ -1,0 +1,11 @@
+<Project Sdk="Godot.NET.Sdk/4.3.0-dev.4">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <NoWarn>CA1050</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+    <PackageReference Include="TesseractOCR" Version="5.3.5" />
+  </ItemGroup>
+</Project>
