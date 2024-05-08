@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ceuyvmdn7jwt1"]
 
-[ext_resource type="Script" path="res://Scripts/WindowTranslator.cs" id="1_fanm5"]
+[ext_resource type="Script" path="res://Scripts/Nodes/WindowTranslator.cs" id="1_fanm5"]
 
 [node name="Main" type="Node"]
 

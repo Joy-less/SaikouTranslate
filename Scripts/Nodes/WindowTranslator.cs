@@ -51,6 +51,7 @@ public partial class WindowTranslator : Node {
             MousePassthrough = true,
             Unresizable = true,
             Unfocusable = true,
+            ContentScaleSize = Vector2I.Zero,
         };
         // Spawn overlay window
         GetTree().Root.AddChild(OverlayWindow);
@@ -150,16 +151,11 @@ public partial class WindowTranslator : Node {
         OverlayWindow.Position = OverlayWindowRect2I.Position;
         OverlayWindow.Size = OverlayWindowRect2I.Size;
 
-        // Clear existing overlays
-        foreach (Node OverlayNode in OverlayWindow.GetChildren()) {
-            OverlayNode.QueueFree();
-        }
-
         // Create labels for each block
         List<Label> Labels = [];
-        foreach (TesseractOCR.Layout.Block Block in Page.Layout) {
-            foreach (TesseractOCR.Layout.Paragraph Paragraph in Block.Paragraphs) {
-                //foreach (TesseractOCR.Layout.TextLine TextLine in Paragraph.TextLines) {
+        await Task.Run(() => {
+            foreach (TesseractOCR.Layout.Block Block in Page.Layout) {
+                foreach (TesseractOCR.Layout.Paragraph Paragraph in Block.Paragraphs) {
                     if (Paragraph.BoundingBox is TesseractOCR.Rect BlockRect) {
                         // Create overlay label
                         Label OverlayLabel = new() {
@@ -174,9 +170,9 @@ public partial class WindowTranslator : Node {
                         // Add overlay label
                         Labels.Add(OverlayLabel);
                     }
-                //}
+                }
             }
-        }
+        });
 
         // Get chosen target language
         string TargetLanguage = TargetLanguageDropdown.GetItemText(TargetLanguageDropdown.Selected);
@@ -191,6 +187,12 @@ public partial class WindowTranslator : Node {
             }
             await Task.WhenAll(TranslateTasks);
         }
+
+        // Clear existing overlay
+        foreach (Node Overlay in OverlayWindow.GetChildren()) {
+            Overlay.QueueFree();
+        }
+        // Overlay each label
         foreach (Label Label in Labels) {
             OverlayWindow.AddChild(Label);
         }
