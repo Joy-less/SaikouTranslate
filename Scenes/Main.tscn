@@ -5,11 +5,10 @@
 
 [node name="Main" type="Node"]
 
-[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageModelDropdown", "CaptureIntervalLabel", "CaptureIntervalSlider", "TranslationServiceDropdown", "SourceLanguageDropdown", "TargetLanguageDropdown", "CustomFontButton", "ToggleButton", "ResetButton", "InformationLabel", "CustomFontFileDialog")]
+[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageModelDropdown", "CaptureIntervalSlider", "TranslationServiceDropdown", "SourceLanguageDropdown", "TargetLanguageDropdown", "CustomFontButton", "ToggleButton", "ResetButton", "InformationLabel", "CustomFontFileDialog")]
 script = ExtResource("1_fanm5")
 SourceLanguageModelDropdown = NodePath("Configurations/SourceLanguageModel/Dropdown")
-CaptureIntervalLabel = NodePath("Configurations/CaptureInterval/Label")
-CaptureIntervalSlider = NodePath("Configurations/CaptureInterval/Slider")
+CaptureIntervalSlider = NodePath("Configurations/CaptureInterval/SpinBox")
 TranslationServiceDropdown = NodePath("Configurations/TranslationService/Dropdown")
 SourceLanguageDropdown = NodePath("Configurations/SourceLanguage/Dropdown")
 TargetLanguageDropdown = NodePath("Configurations/TargetLanguage/Dropdown")
@@ -42,6 +41,20 @@ offset_bottom = 530.0
 bbcode_enabled = true
 text = "Recognised: 0
 Translated: 0"
+
+[node name="CreditsLabel" type="RichTextLabel" parent="Translator"]
+auto_translate_mode = 1
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 230.0
+offset_bottom = 310.0
+bbcode_enabled = true
+text = "By Joyless
+
+Special Thanks:
+Maurice Flanagan
+Jargon
+KitzuGG"
 
 [node name="CustomFontFileDialog" type="FileDialog" parent="Translator"]
 title = "Open a File"
@@ -93,7 +106,7 @@ offset_bottom = 40.0
 bbcode_enabled = true
 text = "[center]Capture Interval"
 
-[node name="Slider" type="HSlider" parent="Translator/Configurations/CaptureInterval"]
+[node name="SpinBox" type="SpinBox" parent="Translator/Configurations/CaptureInterval"]
 layout_mode = 0
 offset_left = 200.0
 offset_right = 400.0
@@ -102,8 +115,9 @@ min_value = 0.2
 max_value = 6.0
 step = 0.1
 value = 0.5
-allow_greater = true
-allow_lesser = true
+alignment = 1
+update_on_text_changed = true
+suffix = "s"
 
 [node name="Separator1" type="HSeparator" parent="Translator/Configurations"]
 layout_mode = 2

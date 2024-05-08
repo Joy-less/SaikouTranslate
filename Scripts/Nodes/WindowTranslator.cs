@@ -14,8 +14,7 @@ using ZiggyCreatures.Caching.Fusion;
 
 public partial class WindowTranslator : Node {
     [Export] OptionButton SourceLanguageModelDropdown;
-    [Export] RichTextLabel CaptureIntervalLabel;
-    [Export] Slider CaptureIntervalSlider;
+    [Export] SpinBox CaptureIntervalSlider;
     [Export] OptionButton TranslationServiceDropdown;
     [Export] OptionButton SourceLanguageDropdown;
     [Export] OptionButton TargetLanguageDropdown;
@@ -40,11 +39,9 @@ public partial class WindowTranslator : Node {
         FillTranslationServiceDropdown();
         FillSourceLanguageDropdown();
         FillTargetLanguageDropdown();
-        SetCaptureInterval();
         SetTranslationService();
 
         // Connect events
-        CaptureIntervalSlider.ValueChanged += _ => SetCaptureInterval();
         TranslationServiceDropdown.ItemSelected += _ => SetTranslationService();
         CustomFontButton.Pressed += PromptSelectCustomFont;
         ToggleButton.Pressed += Toggle;
@@ -119,9 +116,6 @@ public partial class WindowTranslator : Node {
         foreach (string TranslationService in TranslationServices) {
             TranslationServiceDropdown.AddItem(TranslationService);
         }
-    }
-    private void SetCaptureInterval() {
-        CaptureIntervalLabel.Text = $"[center]Capture Interval: {CaptureIntervalSlider.Value:0.0}s";
     }
     private void SetTranslationService() {
         // Get chosen translation service
