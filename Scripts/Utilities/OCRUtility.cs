@@ -3,11 +3,13 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
 
+#nullable enable
+
 [SupportedOSPlatform("windows")]
 public sealed class OCRUtility {
-    public string DataDirectory = ".";
+    public string DataDirectory = "OCR";
 
-    private TesseractOCR.Engine Engine;
+    private TesseractOCR.Engine? Engine;
 
     public TesseractOCR.Page Recognise(byte[] ImageData, string Language) {
         // Create OCR engine for language
@@ -24,7 +26,7 @@ public sealed class OCRUtility {
     public string[] GetAvailableLanguages() {
         return Directory.GetFiles(DataDirectory)
             .Where(File => Path.GetExtension(File).Equals(".traineddata", System.StringComparison.InvariantCultureIgnoreCase))
-            .Select(Path.GetFileNameWithoutExtension)
+            .Select(File => Path.GetFileNameWithoutExtension(File))
             .ToArray();
     }
 }

@@ -3,19 +3,21 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-#pragma warning disable SYSLIB1054
+#nullable enable
 
 // Credit to Maurice Flanagan and Jargon
 // https://stackoverflow.com/a/911225
 
 [SupportedOSPlatform("windows")]
-public static class CaptureUtility {
-    [DllImport("user32.dll")]
-    private static extern bool GetWindowRect(nint hWnd, out RECT lpRect);
-    [DllImport("user32.dll")]
-    private static extern bool PrintWindow(nint hWnd, nint hdcBlt, int nFlags);
-    [DllImport("user32.dll")]
-    private static extern nint GetForegroundWindow();
+public static partial class CaptureUtility {
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetWindowRect(nint hWnd, out RECT lpRect);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PrintWindow(nint hWnd, nint hdcBlt, int nFlags);
+    [LibraryImport("user32.dll")]
+    private static partial nint GetForegroundWindow();
 
     private const int PW_CLIENTONLY = 0x1;
     private const int PW_RENDERFULLCONTENT = 0x2;
@@ -27,6 +29,7 @@ public static class CaptureUtility {
         using Graphics Graphics = Graphics.FromImage(Bitmap);
         nint HdcBitmap = Graphics.GetHdc();
 
+        // Pass flags to capture hardware accelerated windows
         PrintWindow(Handle, HdcBitmap, PW_CLIENTONLY | PW_RENDERFULLCONTENT);
 
         return Bitmap;

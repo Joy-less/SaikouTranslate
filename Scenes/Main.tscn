@@ -1,24 +1,45 @@
 [gd_scene load_steps=2 format=3 uid="uid://ceuyvmdn7jwt1"]
 
-[ext_resource type="Script" path="res://Scripts/Translator.cs" id="1_53jtb"]
+[ext_resource type="Script" path="res://Scripts/WindowTranslator.cs" id="1_fanm5"]
 
 [node name="Main" type="Node"]
 
-[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageDropdown", "TargetLanguageDropdown", "CaptureIntervalLabel", "CaptureIntervalSlider", "ToggleButton")]
-script = ExtResource("1_53jtb")
-SourceLanguageDropdown = NodePath("SourceLanguage/Dropdown")
-TargetLanguageDropdown = NodePath("TargetLanguage/Dropdown")
-CaptureIntervalLabel = NodePath("CaptureInterval/Label")
-CaptureIntervalSlider = NodePath("CaptureInterval/Slider")
+[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageDropdown", "CaptureIntervalLabel", "CaptureIntervalSlider", "TranslationServiceDropdown", "TargetLanguageDropdown", "ToggleButton", "ResetButton")]
+script = ExtResource("1_fanm5")
+SourceLanguageDropdown = NodePath("VBoxContainer/SourceLanguage/Dropdown")
+CaptureIntervalLabel = NodePath("VBoxContainer/CaptureInterval/Label")
+CaptureIntervalSlider = NodePath("VBoxContainer/CaptureInterval/Slider")
+TranslationServiceDropdown = NodePath("VBoxContainer/TranslationService/Dropdown")
+TargetLanguageDropdown = NodePath("VBoxContainer/TargetLanguage/Dropdown")
 ToggleButton = NodePath("ToggleButton")
+ResetButton = NodePath("ResetButton")
 
-[node name="SourceLanguage" type="Panel" parent="Translator"]
+[node name="ToggleButton" type="Button" parent="Translator"]
+offset_left = 380.0
+offset_top = 400.0
+offset_right = 580.0
+offset_bottom = 440.0
+text = "Start"
+
+[node name="ResetButton" type="Button" parent="Translator"]
+offset_left = 830.0
+offset_top = 495.0
+offset_right = 950.0
+offset_bottom = 530.0
+text = "Reset"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Translator"]
 offset_left = 280.0
-offset_top = 80.0
+offset_top = 40.0
 offset_right = 680.0
-offset_bottom = 120.0
+offset_bottom = 390.0
+theme_override_constants/separation = 10
 
-[node name="Label" type="RichTextLabel" parent="Translator/SourceLanguage"]
+[node name="SourceLanguage" type="Panel" parent="Translator/VBoxContainer"]
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/SourceLanguage"]
 layout_mode = 0
 offset_top = 5.0
 offset_right = 200.0
@@ -26,43 +47,20 @@ offset_bottom = 40.0
 bbcode_enabled = true
 text = "[center]Source Language"
 
-[node name="Dropdown" type="OptionButton" parent="Translator/SourceLanguage"]
+[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/SourceLanguage"]
 layout_mode = 0
 offset_left = 200.0
 offset_right = 400.0
 offset_bottom = 40.0
+alignment = 1
+fit_to_longest_item = false
 
-[node name="TargetLanguage" type="Panel" parent="Translator"]
+[node name="CaptureInterval" type="Panel" parent="Translator/VBoxContainer"]
 auto_translate_mode = 1
-offset_left = 280.0
-offset_top = 130.0
-offset_right = 680.0
-offset_bottom = 170.0
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
 
-[node name="Label" type="RichTextLabel" parent="Translator/TargetLanguage"]
-auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
-bbcode_enabled = true
-text = "[center]Target Language"
-
-[node name="Dropdown" type="OptionButton" parent="Translator/TargetLanguage"]
-auto_translate_mode = 1
-layout_mode = 0
-offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
-
-[node name="CaptureInterval" type="Panel" parent="Translator"]
-auto_translate_mode = 1
-offset_left = 280.0
-offset_top = 180.0
-offset_right = 680.0
-offset_bottom = 220.0
-
-[node name="Label" type="RichTextLabel" parent="Translator/CaptureInterval"]
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/CaptureInterval"]
 auto_translate_mode = 1
 layout_mode = 0
 offset_top = 5.0
@@ -71,21 +69,88 @@ offset_bottom = 40.0
 bbcode_enabled = true
 text = "[center]Capture Interval"
 
-[node name="Slider" type="HSlider" parent="Translator/CaptureInterval"]
+[node name="Slider" type="HSlider" parent="Translator/VBoxContainer/CaptureInterval"]
 layout_mode = 0
 offset_left = 200.0
 offset_right = 400.0
 offset_bottom = 40.0
-min_value = 0.3
+min_value = 0.2
 max_value = 6.0
 step = 0.1
-value = 1.0
+value = 0.5
 allow_greater = true
 allow_lesser = true
 
-[node name="ToggleButton" type="Button" parent="Translator"]
-offset_left = 380.0
-offset_top = 400.0
-offset_right = 580.0
-offset_bottom = 440.0
-text = "Start"
+[node name="Separator1" type="HSeparator" parent="Translator/VBoxContainer"]
+layout_mode = 2
+
+[node name="TranslationService" type="Panel" parent="Translator/VBoxContainer"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/TranslationService"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_top = 5.0
+offset_right = 200.0
+offset_bottom = 40.0
+bbcode_enabled = true
+text = "[center]Translation Service"
+
+[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/TranslationService"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_left = 200.0
+offset_right = 400.0
+offset_bottom = 40.0
+alignment = 1
+fit_to_longest_item = false
+
+[node name="TargetLanguage" type="Panel" parent="Translator/VBoxContainer"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/TargetLanguage"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_top = 5.0
+offset_right = 200.0
+offset_bottom = 40.0
+bbcode_enabled = true
+text = "[center]Target Language"
+
+[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/TargetLanguage"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_left = 200.0
+offset_right = 400.0
+offset_bottom = 40.0
+alignment = 1
+fit_to_longest_item = false
+
+[node name="Separator2" type="HSeparator" parent="Translator/VBoxContainer"]
+auto_translate_mode = 1
+layout_mode = 2
+
+[node name="Font" type="Panel" parent="Translator/VBoxContainer"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/Font"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_top = 5.0
+offset_right = 200.0
+offset_bottom = 40.0
+bbcode_enabled = true
+text = "[center]Font"
+
+[node name="Button" type="Button" parent="Translator/VBoxContainer/Font"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_left = 200.0
+offset_right = 400.0
+offset_bottom = 40.0
