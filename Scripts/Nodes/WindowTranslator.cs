@@ -209,7 +209,7 @@ public partial class WindowTranslator : Node {
                 };
                 // Style overlay label
                 OverlayLabel.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
-                OverlayLabel.AddThemeConstantOverride(StringNames.OutlineSize, 8);
+                OverlayLabel.AddThemeConstantOverride(StringNames.OutlineSize, 10);
                 OverlayLabel.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
                 // Add overlay label
                 Labels.Add(OverlayLabel);
