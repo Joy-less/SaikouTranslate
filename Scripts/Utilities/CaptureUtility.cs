@@ -41,7 +41,7 @@ public static partial class CaptureUtility {
         Bitmap.Save(MemoryStream, Format);
         return MemoryStream.ToArray();
     }
-    public static nint GetActiveWindowHandle() {
+    public static nint GetForegroundWindowHandle() {
         return GetForegroundWindow();
     }
     public static Godot.Rect2I GetWindowRect2I(nint Handle) {
