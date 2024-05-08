@@ -1,0 +1,11 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://boptpw8iyf5c6"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_03v5q"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+
+[resource]
+Button/styles/focus = SubResource("StyleBoxFlat_03v5q")

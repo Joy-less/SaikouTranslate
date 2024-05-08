@@ -19,14 +19,20 @@ public partial class WindowTranslator : Node {
     [Export] OptionButton TranslationServiceDropdown;
     [Export] OptionButton SourceLanguageDropdown;
     [Export] OptionButton TargetLanguageDropdown;
+    [Export] Button CustomFontButton;
     [Export] Button ToggleButton;
     [Export] Button ResetButton;
+    [Export] RichTextLabel InformationLabel;
+    [Export] FileDialog CustomFontFileDialog;
+    [Export] Theme MainTheme;
 
     private readonly OCRUtility OCRUtility = new();
     private readonly FusionCache TranslationCache = new(new FusionCacheOptions());
     private ITranslator Translator;
     private Window OverlayWindow;
     private bool Capturing;
+    private long RecognisedCharacters;
+    private long TranslatedCharacters;
 
     public override void _Ready() {
         // Setup controls
@@ -40,13 +46,19 @@ public partial class WindowTranslator : Node {
         // Connect events
         CaptureIntervalSlider.ValueChanged += _ => SetCaptureInterval();
         TranslationServiceDropdown.ItemSelected += _ => SetTranslationService();
+        CustomFontButton.Pressed += PromptSelectCustomFont;
         ToggleButton.Pressed += Toggle;
         ResetButton.Pressed += Reset;
+        CustomFontFileDialog.FileSelected += SetCustomFont;
 
         // Start capturing when started
         _ = CaptureLoopAsync();
     }
-    public Window SpawnOverlayWindow() {
+    public override void _Process(double Delta) {
+        // Log translator information
+        InformationLabel.Text = $"Recognised: {RecognisedCharacters}" + "\n" + $"Translated: {TranslatedCharacters}";
+    }
+    public void SpawnOverlayWindow() {
         // Create overlay window
         OverlayWindow = new Window() {
             AlwaysOnTop = true,
@@ -61,8 +73,6 @@ public partial class WindowTranslator : Node {
         GetTree().Root.AddChild(OverlayWindow);
         // Make overlay window unclickable
         WindowPassthroughUtility.SetWindowPassthrough(OverlayWindow, false);
-        // Return overlay window
-        return OverlayWindow;
     }
     public async Task CaptureLoopAsync(CancellationToken CancelToken = default) {
         while (true) {
@@ -126,6 +136,9 @@ public partial class WindowTranslator : Node {
             _ => null
         };
     }
+    private void PromptSelectCustomFont() {
+        CustomFontFileDialog.Show();
+    }
     private void Toggle() {
         // Toggle capturing flag
         Capturing = !Capturing;
@@ -146,6 +159,15 @@ public partial class WindowTranslator : Node {
     }
     private void Reset() {
         GetTree().ReloadCurrentScene();
+    }
+    private void SetCustomFont(string FilePath) {
+        // Show path
+        CustomFontButton.Text = FilePath;
+        // Load font from path
+        FontFile Font = new();
+        Font.LoadDynamicFont(FilePath);
+        // Set default font
+        MainTheme.DefaultFont = Font;
     }
     private async Task CaptureAsync() {
         // Get handle for active window
@@ -179,6 +201,8 @@ public partial class WindowTranslator : Node {
                         OverlayLabel.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
                         // Add overlay label
                         Labels.Add(OverlayLabel);
+                        // Log recognition
+                        RecognisedCharacters += OverlayLabel.Text.Length;
                     }
                 }
             }
@@ -194,10 +218,11 @@ public partial class WindowTranslator : Node {
                 // Translate label
                 async Task TranslateLabelAsync() {
                     // Try get translation from cache
-                    string Translation = await TranslationCache.GetOrSetAsync(Label.Text, async CancelToken =>
+                    string Translation = await TranslationCache.GetOrSetAsync(Label.Text, async CancelToken => {
                         // Otherwise, request translation
-                        (await Translator.TranslateAsync(Label.Text, TargetLanguage, SourceLanguage)).Translation
-                    );
+                        TranslatedCharacters += Label.Text.Length;
+                        return (await Translator.TranslateAsync(Label.Text, TargetLanguage, SourceLanguage)).Translation;
+                    });
                     // Set translation
                     Label.Text = Translation;
                 }

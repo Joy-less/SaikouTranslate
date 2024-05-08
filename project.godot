@@ -26,3 +26,11 @@ window/per_pixel_transparency/allowed=true
 [dotnet]
 
 project/assembly_name="Translator"
+
+[gui]
+
+theme/custom="res://Miscellaneous/MainTheme.tres"
+
+[rendering]
+
+renderer/rendering_method="mobile"
