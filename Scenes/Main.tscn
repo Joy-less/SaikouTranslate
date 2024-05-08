@@ -21,9 +21,9 @@ MainTheme = ExtResource("2_vyaov")
 
 [node name="ToggleButton" type="Button" parent="Translator"]
 offset_left = 380.0
-offset_top = 420.0
+offset_top = 430.0
 offset_right = 580.0
-offset_bottom = 460.0
+offset_bottom = 470.0
 text = "Start"
 
 [node name="ResetButton" type="Button" parent="Translator"]
@@ -38,7 +38,6 @@ offset_left = 10.0
 offset_top = 480.0
 offset_right = 230.0
 offset_bottom = 530.0
-bbcode_enabled = true
 text = "Recognised: 0
 Translated: 0"
 
@@ -67,9 +66,9 @@ use_native_dialog = true
 
 [node name="Configurations" type="VBoxContainer" parent="Translator"]
 offset_left = 280.0
-offset_top = 60.0
+offset_top = 70.0
 offset_right = 680.0
-offset_bottom = 410.0
+offset_bottom = 420.0
 theme_override_constants/separation = 10
 
 [node name="SourceLanguageModel" type="Panel" parent="Translator/Configurations"]

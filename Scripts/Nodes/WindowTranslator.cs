@@ -129,6 +129,9 @@ public partial class WindowTranslator : Node {
             "Microsoft" => new MicrosoftTranslator(),
             _ => null
         };
+        // Enable source/target language dropdowns when translation enabled
+        SourceLanguageDropdown.Disabled = Translator is null;
+        TargetLanguageDropdown.Disabled = Translator is null;
     }
     private void PromptSelectCustomFont() {
         CustomFontFileDialog.Show();
