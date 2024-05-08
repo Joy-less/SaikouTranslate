@@ -4,12 +4,13 @@
 
 [node name="Main" type="Node"]
 
-[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageDropdown", "CaptureIntervalLabel", "CaptureIntervalSlider", "TranslationServiceDropdown", "TargetLanguageDropdown", "ToggleButton", "ResetButton")]
+[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageModelDropdown", "CaptureIntervalLabel", "CaptureIntervalSlider", "TranslationServiceDropdown", "SourceLanguageDropdown", "TargetLanguageDropdown", "ToggleButton", "ResetButton")]
 script = ExtResource("1_fanm5")
-SourceLanguageDropdown = NodePath("VBoxContainer/SourceLanguage/Dropdown")
+SourceLanguageModelDropdown = NodePath("VBoxContainer/SourceLanguageModel/Dropdown")
 CaptureIntervalLabel = NodePath("VBoxContainer/CaptureInterval/Label")
 CaptureIntervalSlider = NodePath("VBoxContainer/CaptureInterval/Slider")
 TranslationServiceDropdown = NodePath("VBoxContainer/TranslationService/Dropdown")
+SourceLanguageDropdown = NodePath("VBoxContainer/SourceLanguage/Dropdown")
 TargetLanguageDropdown = NodePath("VBoxContainer/TargetLanguage/Dropdown")
 ToggleButton = NodePath("ToggleButton")
 ResetButton = NodePath("ResetButton")
@@ -35,19 +36,19 @@ offset_right = 680.0
 offset_bottom = 390.0
 theme_override_constants/separation = 10
 
-[node name="SourceLanguage" type="Panel" parent="Translator/VBoxContainer"]
+[node name="SourceLanguageModel" type="Panel" parent="Translator/VBoxContainer"]
 custom_minimum_size = Vector2(400, 40)
 layout_mode = 2
 
-[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/SourceLanguage"]
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/SourceLanguageModel"]
 layout_mode = 0
 offset_top = 5.0
 offset_right = 200.0
 offset_bottom = 40.0
 bbcode_enabled = true
-text = "[center]Source Language"
+text = "[center]Source Language Model"
 
-[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/SourceLanguage"]
+[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/SourceLanguageModel"]
 layout_mode = 0
 offset_left = 200.0
 offset_right = 400.0
@@ -99,6 +100,29 @@ bbcode_enabled = true
 text = "[center]Translation Service"
 
 [node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/TranslationService"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_left = 200.0
+offset_right = 400.0
+offset_bottom = 40.0
+alignment = 1
+fit_to_longest_item = false
+
+[node name="SourceLanguage" type="Panel" parent="Translator/VBoxContainer"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/VBoxContainer/SourceLanguage"]
+auto_translate_mode = 1
+layout_mode = 0
+offset_top = 5.0
+offset_right = 200.0
+offset_bottom = 40.0
+bbcode_enabled = true
+text = "[center]Source Language"
+
+[node name="Dropdown" type="OptionButton" parent="Translator/VBoxContainer/SourceLanguage"]
 auto_translate_mode = 1
 layout_mode = 0
 offset_left = 200.0

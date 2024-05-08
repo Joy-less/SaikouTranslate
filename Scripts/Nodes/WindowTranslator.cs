@@ -6,30 +6,34 @@ using System.Threading.Tasks;
 using Godot;
 using GTranslate;
 using GTranslate.Translators;
+using ZiggyCreatures.Caching.Fusion;
 
 #pragma warning disable CA1416
 
 // Download Tesseract model from https://github.com/tesseract-ocr/tessdata
 
 public partial class WindowTranslator : Node {
-    [Export] OptionButton SourceLanguageDropdown;
+    [Export] OptionButton SourceLanguageModelDropdown;
     [Export] RichTextLabel CaptureIntervalLabel;
     [Export] Slider CaptureIntervalSlider;
     [Export] OptionButton TranslationServiceDropdown;
+    [Export] OptionButton SourceLanguageDropdown;
     [Export] OptionButton TargetLanguageDropdown;
     [Export] Button ToggleButton;
     [Export] Button ResetButton;
 
     private readonly OCRUtility OCRUtility = new();
+    private readonly FusionCache TranslationCache = new(new FusionCacheOptions());
     private ITranslator Translator;
     private Window OverlayWindow;
     private bool Capturing;
 
     public override void _Ready() {
         // Setup controls
+        FillSourceLanguageModelDropdown();
+        FillTranslationServiceDropdown();
         FillSourceLanguageDropdown();
         FillTargetLanguageDropdown();
-        FillTranslationServiceDropdown();
         SetCaptureInterval();
         SetTranslationService();
 
@@ -68,26 +72,31 @@ public partial class WindowTranslator : Node {
             if (Capturing) {
                 try {
                     await CaptureAsync();
-                } catch {}
+                }
+                catch (Exception Ex) {
+                    GD.PushError(Ex);
+                }
             }
         }
     }
 
-    private void FillSourceLanguageDropdown() {
-        // Fill dropdown with source languages
-        SourceLanguageDropdown.Clear();
-        foreach (string Language in OCRUtility.GetAvailableLanguages()) {
-            SourceLanguageDropdown.AddItem(Language);
+    private static void FillDropdown(OptionButton Dropdown, IList<string> Items, string Default = null) {
+        Dropdown.Clear();
+        foreach (string Item in Items) {
+            Dropdown.AddItem(Item);
+        }
+        if (Default is not null) {
+            Dropdown.Selected = Items.IndexOf(Default);
         }
     }
+    private void FillSourceLanguageModelDropdown() {
+        FillDropdown(SourceLanguageModelDropdown, OCRUtility.GetAvailableLanguages());
+    }
+    private void FillSourceLanguageDropdown() {
+        FillDropdown(SourceLanguageDropdown, Language.LanguageDictionary.Values.Select(Language => Language.Name).ToArray(), "Japanese");
+    }
     private void FillTargetLanguageDropdown() {
-        // Fill dropdown with target languages
-        TargetLanguageDropdown.Clear();
-        foreach (Language Language in Language.LanguageDictionary.Values) {
-            TargetLanguageDropdown.AddItem(Language.Name);
-        }
-        // Select English by default
-        TargetLanguageDropdown.Selected = Language.LanguageDictionary.Values.Select(Language => Language.Name).ToList().IndexOf("English");
+        FillDropdown(TargetLanguageDropdown, Language.LanguageDictionary.Values.Select(Language => Language.Name).ToArray(), "English");
     }
     private void FillTranslationServiceDropdown() {
         // Get translation services
@@ -123,7 +132,7 @@ public partial class WindowTranslator : Node {
         // Change toggle button text
         ToggleButton.Text = Capturing ? "Stop" : "Start";
         // Disable configurations while capturing
-        SourceLanguageDropdown.Disabled = Capturing;
+        SourceLanguageModelDropdown.Disabled = Capturing;
         TargetLanguageDropdown.Disabled = Capturing;
         TranslationServiceDropdown.Disabled = Capturing;
         CaptureIntervalSlider.Editable = !Capturing;
@@ -141,10 +150,10 @@ public partial class WindowTranslator : Node {
     private async Task CaptureAsync() {
         // Get handle for active window
         nint ActiveWindowHandle = CaptureUtility.GetActiveWindowHandle();
-        // Get chosen source language
-        string SourceLanguage = SourceLanguageDropdown.GetItemText(SourceLanguageDropdown.Selected);
+        // Get chosen source language model for OCR
+        string SourceLanguageModel = SourceLanguageModelDropdown.GetItemText(SourceLanguageModelDropdown.Selected);
         // Recognise page from active window
-        using TesseractOCR.Page Page = await Task.Run(() => OCRUtility.Recognise(ActiveWindowHandle, SourceLanguage));
+        using TesseractOCR.Page Page = await Task.Run(() => OCRUtility.Recognise(ActiveWindowHandle, SourceLanguageModel));
 
         // Move and scale overlay window to cover captured window
         Rect2I OverlayWindowRect2I = CaptureUtility.GetWindowRect2I(ActiveWindowHandle);
@@ -161,6 +170,7 @@ public partial class WindowTranslator : Node {
                         Label OverlayLabel = new() {
                             Text = Paragraph.Text,
                             Position = new Vector2(BlockRect.X1, BlockRect.Y1),
+                            RotationDegrees = Paragraph.Properties.DeskewAngle,
                             Size = new Vector2(BlockRect.Width, BlockRect.Height),
                         };
                         // Style overlay label
@@ -174,14 +184,22 @@ public partial class WindowTranslator : Node {
             }
         });
 
-        // Get chosen target language
+        // Get chosen source and target languages
+        string SourceLanguage = SourceLanguageDropdown.GetItemText(SourceLanguageDropdown.Selected);
         string TargetLanguage = TargetLanguageDropdown.GetItemText(TargetLanguageDropdown.Selected);
         // Translate each label
         if (Translator is not null) {
             List<Task> TranslateTasks = [];
             foreach (Label Label in Labels) {
+                // Translate label
                 async Task TranslateLabelAsync() {
-                    Label.Text = (await Translator.TranslateAsync(Label.Text, TargetLanguage, SourceLanguage)).Translation;
+                    // Try get translation from cache
+                    string Translation = await TranslationCache.GetOrSetAsync(Label.Text, async CancelToken =>
+                        // Otherwise, request translation
+                        (await Translator.TranslateAsync(Label.Text, TargetLanguage, SourceLanguage)).Translation
+                    );
+                    // Set translation
+                    Label.Text = Translation;
                 }
                 TranslateTasks.Add(TranslateLabelAsync());
             }

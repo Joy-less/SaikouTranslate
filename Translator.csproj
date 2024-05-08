@@ -9,5 +9,6 @@
     <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
     <PackageReference Include="TesseractOCR" Version="5.3.5" />
     <PackageReference Include="GTranslate" Version="2.1.6" />
+    <PackageReference Include="ZiggyCreatures.FusionCache" Version="1.1.0" />
   </ItemGroup>
 </Project>
