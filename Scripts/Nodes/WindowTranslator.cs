@@ -30,8 +30,8 @@ public partial class WindowTranslator : Node {
     private ITranslator Translator;
     private Window OverlayWindow;
     private bool Capturing;
-    private long RecognisedCharacters;
-    private long TranslatedCharacters;
+    private (long RecognisedCharacters, long TranslatedCharacters) RecognitionInfo;
+    private long LastCaptureId;
 
     public override void _Ready() {
         // Setup controls
@@ -53,7 +53,7 @@ public partial class WindowTranslator : Node {
     }
     public override void _Process(double Delta) {
         // Log translator information
-        InformationLabel.Text = $"Recognised: {RecognisedCharacters}" + "\n" + $"Translated: {TranslatedCharacters}";
+        InformationLabel.Text = $"Recognised: {RecognitionInfo.RecognisedCharacters}" + "\n" + $"Translated: {RecognitionInfo.TranslatedCharacters}";
     }
     public void SpawnOverlayWindow() {
         // Create overlay window
@@ -143,18 +143,19 @@ public partial class WindowTranslator : Node {
         ToggleButton.Text = Capturing ? "Stop" : "Start";
         // Disable configurations while capturing
         SourceLanguageModelDropdown.Disabled = Capturing;
+        CaptureIntervalSlider.Editable = !Capturing;
         TargetLanguageDropdown.Disabled = Capturing;
         TranslationServiceDropdown.Disabled = Capturing;
-        CaptureIntervalSlider.Editable = !Capturing;
+        CustomFontButton.Disabled = Capturing;
         // Destroy overlay window
         OverlayWindow?.QueueFree();
-        OverlayWindow = null;
         // Spawn overlay window
-        if (Capturing) {
-            SpawnOverlayWindow();
-        }
+        SpawnOverlayWindow();
     }
     private void Reset() {
+        // Destroy overlay window
+        OverlayWindow?.QueueFree();
+        // Reload scene
         GetTree().ReloadCurrentScene();
     }
     private void SetCustomFont(string FilePath) {
@@ -166,7 +167,18 @@ public partial class WindowTranslator : Node {
         // Set default font
         MainTheme.DefaultFont = Font;
     }
+    private void ClearOverlayWindow() {
+        // Prevent current capture from overlaying
+        Interlocked.Increment(ref LastCaptureId);
+        // Clear overlays
+        foreach (Node Overlay in OverlayWindow.GetChildren()) {
+            Overlay.QueueFree();
+        }
+    }
     private async Task CaptureAsync() {
+        // Increment capture ID
+        long CaptureId = Interlocked.Increment(ref LastCaptureId);
+
         // Get handle for active window
         nint ActiveWindowHandle = CaptureUtility.GetActiveWindowHandle();
         // Get chosen source language model for OCR
@@ -179,31 +191,35 @@ public partial class WindowTranslator : Node {
         OverlayWindow.Position = OverlayWindowRect2I.Position;
         OverlayWindow.Size = OverlayWindowRect2I.Size;
 
-        // Create labels for each block
+        // Create labels for each recognition
         List<Label> Labels = [];
         await Task.Run(() => {
-            foreach (TesseractOCR.Layout.Block Block in Page.Layout) {
-                foreach (TesseractOCR.Layout.Paragraph Paragraph in Block.Paragraphs) {
-                    if (Paragraph.BoundingBox is TesseractOCR.Rect BlockRect) {
-                        // Create overlay label
-                        Label OverlayLabel = new() {
-                            Text = Paragraph.Text,
-                            Position = new Vector2(BlockRect.X1, BlockRect.Y1),
-                            RotationDegrees = Paragraph.Properties.DeskewAngle,
-                            Size = new Vector2(BlockRect.Width, BlockRect.Height),
-                        };
-                        // Style overlay label
-                        OverlayLabel.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
-                        OverlayLabel.AddThemeConstantOverride(StringNames.OutlineSize, 8);
-                        OverlayLabel.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
-                        // Add overlay label
-                        Labels.Add(OverlayLabel);
-                        // Log recognition
-                        RecognisedCharacters += OverlayLabel.Text.Length;
-                    }
+            foreach (TesseractOCR.Layout.Paragraph Paragraph in Page.Layout.SelectMany(Block => Block.Paragraphs)) {
+                // Ensure bounds available
+                if (Paragraph.BoundingBox is not TesseractOCR.Rect BlockRect) {
+                    continue;
                 }
+                // Create overlay label
+                Label OverlayLabel = new() {
+                    Text = Paragraph.Text,
+                    Position = new Vector2(BlockRect.X1, BlockRect.Y1),
+                    RotationDegrees = Paragraph.Properties.DeskewAngle,
+                    Size = new Vector2(BlockRect.Width, BlockRect.Height),
+                    Visible = false,
+                };
+                // Style overlay label
+                OverlayLabel.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
+                OverlayLabel.AddThemeConstantOverride(StringNames.OutlineSize, 8);
+                OverlayLabel.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
+                // Add overlay label
+                Labels.Add(OverlayLabel);
+                // Log recognition
+                RecognitionInfo.RecognisedCharacters += OverlayLabel.Text.Length;
             }
         });
+
+        // Ensure this is the latest capture
+        if (CaptureId < LastCaptureId) return;
 
         // Get chosen source and target languages
         string SourceLanguage = SourceLanguageDropdown.GetItemText(SourceLanguageDropdown.Selected);
@@ -217,7 +233,7 @@ public partial class WindowTranslator : Node {
                     // Try get translation from cache
                     string Translation = await TranslationCache.GetOrSetAsync(Label.Text, async CancelToken => {
                         // Otherwise, request translation
-                        TranslatedCharacters += Label.Text.Length;
+                        RecognitionInfo.TranslatedCharacters += Label.Text.Length;
                         return (await Translator.TranslateAsync(Label.Text, TargetLanguage, SourceLanguage)).Translation;
                     });
                     // Set translation
@@ -225,15 +241,18 @@ public partial class WindowTranslator : Node {
                 }
                 TranslateTasks.Add(TranslateLabelAsync());
             }
+            // Wait for all translations to complete
             await Task.WhenAll(TranslateTasks);
         }
 
-        // Clear existing overlay
-        foreach (Node Overlay in OverlayWindow.GetChildren()) {
-            Overlay.QueueFree();
-        }
+        // Ensure this is the latest capture
+        if (CaptureId < LastCaptureId) return;
+
+        // Remove existing overlays
+        ClearOverlayWindow();
         // Overlay each label
         foreach (Label Label in Labels) {
+            Label.Show();
             OverlayWindow.AddChild(Label);
         }
     }
