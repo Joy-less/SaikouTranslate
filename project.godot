@@ -10,10 +10,10 @@ config_version=5
 
 [application]
 
-config/name="Translator"
+config/name="Saikou Translate"
 run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
-config/icon="res://Images/icon.svg"
+config/icon="res://Images/Icon.png"
 
 [display]
 
