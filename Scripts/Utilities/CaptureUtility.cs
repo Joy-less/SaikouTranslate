@@ -3,12 +3,11 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-#nullable enable
 
 // Credit to Maurice Flanagan and Jargon
 // https://stackoverflow.com/a/911225
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("Windows")]
 public static partial class CaptureUtility {
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

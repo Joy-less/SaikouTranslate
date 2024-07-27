@@ -3,9 +3,7 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
 
-#nullable enable
-
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("Windows")]
 public sealed class OCRUtility {
     public string DataDirectory = "OCR";
 

@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Godot;
 using GTranslate;
 using GTranslate.Translators;
 using ZiggyCreatures.Caching.Fusion;
 
-#pragma warning disable CA1416
-
-// Download Tesseract model from https://github.com/tesseract-ocr/tessdata
-
+[SupportedOSPlatform("Windows")]
 public partial class WindowTranslator : Node {
     [Export] OptionButton SourceLanguageModelDropdown;
     [Export] SpinBox CaptureIntervalSlider;
@@ -25,13 +22,24 @@ public partial class WindowTranslator : Node {
     [Export] FileDialog CustomFontFileDialog;
     [Export] Theme MainTheme;
 
+    public readonly Dictionary<string, ITranslator?> Translators = new() {
+        {"Disabled", null},
+        {"Any", new AggregateTranslator()},
+        {"Google", new GoogleTranslator()},
+        {"Bing", new BingTranslator()},
+        {"Yandex", new YandexTranslator()},
+        {"Microsoft", new MicrosoftTranslator()},
+    };
+
     private readonly OCRUtility OCRUtility = new();
     private readonly FusionCache TranslationCache = new(new FusionCacheOptions());
-    private ITranslator Translator;
-    private Window OverlayWindow;
+    private ITranslator? Translator;
+    private Window? OverlayWindow;
+    private bool Started;
+    private double TimeUntilCapture;
     private bool Capturing;
-    private (long RecognisedCharacters, long TranslatedCharacters) RecognitionInfo;
-    private long LastCaptureId;
+    private long RecognisedCount;
+    private long TranslatedCount;
 
     public override void _Ready() {
         // Setup controls
@@ -47,19 +55,29 @@ public partial class WindowTranslator : Node {
         ToggleButton.Pressed += Toggle;
         ResetButton.Pressed += Reset;
         CustomFontFileDialog.FileSelected += SetCustomFont;
-
-        // Start capturing when started
-        _ = CaptureLoopAsync();
     }
     public override void _Process(double Delta) {
         // Log translator information
-        InformationLabel.Text = $"Recognised: {RecognitionInfo.RecognisedCharacters}" + "\n" + $"Translated: {RecognitionInfo.TranslatedCharacters}";
+        InformationLabel.Text = $"""
+            Recognised: {RecognisedCount}
+            Translated: {TranslatedCount}
+            """;
+        
+        // Capture screen every interval
+        if (Started && !Capturing) {
+            TimeUntilCapture -= Delta;
+            if (TimeUntilCapture <= 0) {
+                TimeUntilCapture = CaptureIntervalSlider.Value;
+                _ = CaptureAsync();
+            }
+        }
     }
     public void SpawnOverlayWindow() {
         // Create overlay window
         OverlayWindow = new Window() {
             AlwaysOnTop = true,
             Transparent = true,
+            TransparentBg = true,
             Borderless = true,
             MousePassthrough = true,
             Unresizable = true,
@@ -72,29 +90,20 @@ public partial class WindowTranslator : Node {
         // Make overlay window unclickable
         WindowPassthroughUtility.SetWindowPassthrough(OverlayWindow, false);
     }
-    public async Task CaptureLoopAsync(CancellationToken CancelToken = default) {
-        while (true) {
-            // Wait for next capture
-            await Task.Delay(TimeSpan.FromSeconds(CaptureIntervalSlider.Value), CancelToken);
-            // Try capture foreground window
-            if (Capturing) {
-                try {
-                    await CaptureAsync();
-                }
-                catch (Exception Ex) {
-                    GD.PushError(Ex);
-                }
-            }
-        }
+    public void DestroyOverlayWindow() {
+        OverlayWindow?.QueueFree();
+        OverlayWindow = null;
     }
 
-    private static void FillDropdown(OptionButton Dropdown, IList<string> Items, string Default = null) {
+    private static void FillDropdown(OptionButton Dropdown, IEnumerable<string> Items, string? Default = null) {
         Dropdown.Clear();
+
         foreach (string Item in Items) {
             Dropdown.AddItem(Item);
-        }
-        if (Default is not null) {
-            Dropdown.Selected = Items.IndexOf(Default);
+
+            if (Default == Item) {
+                Dropdown.Select(Dropdown.ItemCount - 1);
+            }
         }
     }
     private void FillSourceLanguageModelDropdown() {
@@ -107,14 +116,9 @@ public partial class WindowTranslator : Node {
         FillDropdown(TargetLanguageDropdown, Language.LanguageDictionary.Values.Select(Language => Language.Name).ToArray(), "English");
     }
     private void FillTranslationServiceDropdown() {
-        // Get translation services
-        List<string> TranslationServices = ["Disabled", "Any"];
-        foreach (TranslationServices TranslationService in Enum.GetValues<TranslationServices>()) {
-            TranslationServices.Add(TranslationService.ToString());
-        }
         // Fill dropdown with translation services
         TranslationServiceDropdown.Clear();
-        foreach (string TranslationService in TranslationServices) {
+        foreach (string TranslationService in Translators.Keys) {
             TranslationServiceDropdown.AddItem(TranslationService);
         }
     }
@@ -122,14 +126,7 @@ public partial class WindowTranslator : Node {
         // Get chosen translation service
         string TranslationService = TranslationServiceDropdown.GetItemText(TranslationServiceDropdown.Selected);
         // Set translator
-        Translator = TranslationService switch {
-            "Any" => new AggregateTranslator(),
-            "Google" => new GoogleTranslator(),
-            "Bing" => new BingTranslator(),
-            "Yandex" => new YandexTranslator(),
-            "Microsoft" => new MicrosoftTranslator(),
-            _ => null
-        };
+        Translator = Translators[TranslationService];
         // Enable source/target language dropdowns when translation enabled
         SourceLanguageDropdown.Disabled = Translator is null;
         TargetLanguageDropdown.Disabled = Translator is null;
@@ -138,28 +135,27 @@ public partial class WindowTranslator : Node {
         CustomFontFileDialog.Show();
     }
     private void Toggle() {
-        // Toggle capturing flag
-        Capturing = !Capturing;
+        // Toggle started flag
+        Started = !Started;
         // Change toggle button text
-        ToggleButton.Text = Capturing ? "Stop" : "Start";
+        ToggleButton.Text = Started ? "Stop" : "Start";
         // Disable configurations while capturing
-        SourceLanguageModelDropdown.Disabled = Capturing;
-        CaptureIntervalSlider.Editable = !Capturing;
-        SourceLanguageDropdown.Disabled = Capturing || Translator is null;
-        TargetLanguageDropdown.Disabled = Capturing || Translator is null;
-        TranslationServiceDropdown.Disabled = Capturing;
-        CustomFontButton.Disabled = Capturing;
-        // Destroy overlay window
-        OverlayWindow?.QueueFree();
-        OverlayWindow = null;
+        SourceLanguageModelDropdown.Disabled = Started;
+        CaptureIntervalSlider.Editable = !Started;
+        SourceLanguageDropdown.Disabled = Started || Translator is null;
+        TargetLanguageDropdown.Disabled = Started || Translator is null;
+        TranslationServiceDropdown.Disabled = Started;
+        CustomFontButton.Disabled = Started;
+        // Destroy existing overlay window
+        DestroyOverlayWindow();
         // Spawn overlay window
-        if (Capturing) {
+        if (Started) {
             SpawnOverlayWindow();
         }
     }
     private void Reset() {
         // Destroy overlay window
-        OverlayWindow?.QueueFree();
+        DestroyOverlayWindow();
         // Reload scene
         GetTree().ReloadCurrentScene();
     }
@@ -174,88 +170,97 @@ public partial class WindowTranslator : Node {
     }
     private void ClearOverlayWindow() {
         // Prevent current capture from overlaying
-        Interlocked.Increment(ref LastCaptureId);
+        Capturing = false;
         // Clear overlays
-        foreach (Node Overlay in OverlayWindow.GetChildren()) {
-            Overlay.QueueFree();
+        if (OverlayWindow is not null) {
+            foreach (Node Overlay in OverlayWindow.GetChildren()) {
+                Overlay.QueueFree();
+            }
         }
     }
     private async Task CaptureAsync() {
-        // Increment capture ID
-        long CaptureId = Interlocked.Increment(ref LastCaptureId);
+        if (Capturing) return;
+        Capturing = true;
 
-        // Get handle of foreground window
-        nint ForegroundWindowHandle = CaptureUtility.GetForegroundWindowHandle();
-        // Get chosen source language model for OCR
-        string SourceLanguageModel = SourceLanguageModelDropdown.GetItemText(SourceLanguageModelDropdown.Selected);
-        // Recognise page from foreground window
-        using TesseractOCR.Page Page = await Task.Run(() => OCRUtility.Recognise(ForegroundWindowHandle, SourceLanguageModel));
-        // Recognise paragraphs from page
-        IEnumerable<TesseractOCR.Layout.Paragraph> Paragraphs = await Task.Run(() => Page.Layout.SelectMany(Block => Block.Paragraphs));
+        try {
+            // Get handle of foreground window
+            nint ForegroundWindowHandle = CaptureUtility.GetForegroundWindowHandle();
+            // Get chosen source language model for OCR
+            string SourceLanguageModel = SourceLanguageModelDropdown.GetItemText(SourceLanguageModelDropdown.Selected);
+            // Recognise page from foreground window
+            using TesseractOCR.Page Page = await Task.Run(() => OCRUtility.Recognise(ForegroundWindowHandle, SourceLanguageModel));
+            // Recognise paragraphs from page
+            IEnumerable<TesseractOCR.Layout.Paragraph> Paragraphs = await Task.Run(() => Page.Layout.SelectMany(Block => Block.Paragraphs));
 
-        // Get rect of foreground window
-        Rect2I ForegroundWindowRect = CaptureUtility.GetWindowRect2I(ForegroundWindowHandle);
+            // Get rect of foreground window
+            Rect2I ForegroundWindowRect = CaptureUtility.GetWindowRect2I(ForegroundWindowHandle);
 
-        // Create labels for each recognition
-        List<Label> Overlays = [];
-        await Task.Run(() => {
-            foreach (TesseractOCR.Layout.Paragraph Paragraph in Paragraphs) {
-                // Ensure bounds available
-                if (Paragraph.BoundingBox is not TesseractOCR.Rect BlockRect) {
-                    continue;
+            // Create labels for each recognition
+            List<Label> Overlays = [];
+            await Task.Run(() => {
+                foreach (TesseractOCR.Layout.Paragraph Paragraph in Paragraphs) {
+                    // Ensure bounds available
+                    if (Paragraph.BoundingBox is not TesseractOCR.Rect BlockRect) {
+                        continue;
+                    }
+                    // Create overlay label
+                    Label Overlay = new() {
+                        Text = Paragraph.Text,
+                        Position = new Vector2(BlockRect.X1, BlockRect.Y1) + ForegroundWindowRect.Position,
+                        Size = new Vector2(BlockRect.Width, BlockRect.Height),
+                    };
+                    RecognisedCount += Overlay.Text.Length;
+                    // Style overlay label
+                    Overlay.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
+                    Overlay.AddThemeConstantOverride(StringNames.OutlineSize, 10);
+                    Overlay.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
+                    // Add overlay label
+                    Overlays.Add(Overlay);
+
+                    // Ensure this is still the latest capture
+                    if (!Capturing) return;
                 }
-                // Create overlay label
-                Label Overlay = new() {
-                    Text = Paragraph.Text,
-                    Position = new Vector2(BlockRect.X1, BlockRect.Y1) + ForegroundWindowRect.Position,
-                    Size = new Vector2(BlockRect.Width, BlockRect.Height),
-                };
-                // Style overlay label
-                Overlay.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
-                Overlay.AddThemeConstantOverride(StringNames.OutlineSize, 10);
-                Overlay.AddThemeFontSizeOverride(StringNames.FontSize, Paragraph.FontProperties.PointSize);
-                // Add overlay label
-                Overlays.Add(Overlay);
-                // Log recognition
-                RecognitionInfo.RecognisedCharacters += Overlay.Text.Length;
+            });
+
+            // Get chosen source and target languages
+            string SourceLanguage = SourceLanguageDropdown.GetItemText(SourceLanguageDropdown.Selected);
+            string TargetLanguage = TargetLanguageDropdown.GetItemText(TargetLanguageDropdown.Selected);
+            // Translate each label
+            if (Translator is not null) {
+                List<Task> TranslateTasks = [];
+                foreach (Label Overlay in Overlays) {
+                    // Translate label
+                    async Task TranslateLabelAsync() {
+                        // Try get translation from cache
+                        string Translation = await TranslationCache.GetOrSetAsync(Overlay.Text, async CancelToken => {
+                            // Otherwise, request translation
+                            TranslatedCount += Overlay.Text.Length;
+                            return (await Translator.TranslateAsync(Overlay.Text, TargetLanguage, SourceLanguage)).Translation;
+                        });
+                        // Set text to translation
+                        Overlay.Text = Translation;
+                    }
+                    TranslateTasks.Add(TranslateLabelAsync());
+                }
+                // Wait for all translations to complete
+                await Task.WhenAll(TranslateTasks);
             }
-        });
 
-        // Ensure this is the latest capture
-        if (CaptureId != LastCaptureId) return;
+            // Ensure this is still the latest capture
+            if (!Capturing) return;
 
-        // Get chosen source and target languages
-        string SourceLanguage = SourceLanguageDropdown.GetItemText(SourceLanguageDropdown.Selected);
-        string TargetLanguage = TargetLanguageDropdown.GetItemText(TargetLanguageDropdown.Selected);
-        // Translate each label
-        if (Translator is not null) {
-            List<Task> TranslateTasks = [];
+            // Clear existing overlays
+            ClearOverlayWindow();
+            // Overlay each label
             foreach (Label Overlay in Overlays) {
-                // Translate label
-                async Task TranslateLabelAsync() {
-                    // Try get translation from cache
-                    string Translation = await TranslationCache.GetOrSetAsync(Overlay.Text, async CancelToken => {
-                        // Otherwise, request translation
-                        RecognitionInfo.TranslatedCharacters += Overlay.Text.Length;
-                        return (await Translator.TranslateAsync(Overlay.Text, TargetLanguage, SourceLanguage)).Translation;
-                    });
-                    // Set text to translation
-                    Overlay.Text = Translation;
-                }
-                TranslateTasks.Add(TranslateLabelAsync());
+                OverlayWindow?.AddChild(Overlay);
             }
-            // Wait for all translations to complete
-            await Task.WhenAll(TranslateTasks);
         }
-
-        // Ensure this is the latest capture
-        if (CaptureId != LastCaptureId) return;
-
-        // Remove existing overlays
-        ClearOverlayWindow();
-        // Overlay each label
-        foreach (Label Overlay in Overlays) {
-            OverlayWindow.AddChild(Overlay);
+        catch (Exception Ex) {
+            GD.PushError(Ex);
+        }
+        finally {
+            Capturing = false;
         }
     }
 }

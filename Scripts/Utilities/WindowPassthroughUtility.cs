@@ -8,7 +8,7 @@ using System.Runtime.Versioning;
 // Credit to KitzuGG:
 // https://forum.godotengine.org/t/mousepassthrough-for-non-same-applications/49284/3
 
-[SupportedOSPlatform("windows")]
+[SupportedOSPlatform("Windows")]
 public static class WindowPassthroughUtility {
 	private const int GWL_EXSTYLE = -20;
 	private const long WS_EX_TRANSPARENT = 0x00000020L;
