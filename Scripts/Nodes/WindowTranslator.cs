@@ -151,6 +151,8 @@ public partial class WindowTranslator : Node {
     private void Reset() {
         // Destroy overlay window
         DestroyOverlayWindow();
+        // Reset custom font
+        MainTheme.DefaultFont = null;
         // Reload scene
         GetTree().ReloadCurrentScene();
     }
