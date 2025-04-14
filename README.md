@@ -1,4 +1,4 @@
-<img src="https://github.com/Joy-less/SaikouTranslate/blob/66381ec4a70626f48099e08676d0191b9cede4ac/Images/Icon.png" width="150" />
+<img src="https://github.com/Joy-less/SaikouTranslate/blob/main/Images/Icon.png?raw=true" width="150" />
 
 # Saikou Translate
 
@@ -8,11 +8,11 @@ Saikou Translate is a tool to capture and translate text on the screen.
 
 ## Example
 
-<img src="https://github.com/Joy-less/SaikouTranslate/blob/665c0dc2126f4284c785013e68fc79f8e1a5498e/Images/Example.png" width="600" />
+<img src="https://github.com/Joy-less/SaikouTranslate/blob/main/Images/Example.png?raw=true" width="600" />
 
 ## Disclaimers
 
-- Only works on Windows, since there's no easy way to capture or overlay windows on other platforms.
+- Windows-only (since there's no easy way to capture or overlay windows on other platforms).
 - Output quality isn't perfect, especially for pixel text.
 - Translation uses free web APIs. You might get rate limited.
 
