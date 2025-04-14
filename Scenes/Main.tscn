@@ -6,13 +6,14 @@
 
 [node name="Main" type="Node"]
 
-[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageModelDropdown", "CaptureIntervalSlider", "TranslationServiceDropdown", "SourceLanguageDropdown", "TargetLanguageDropdown", "CustomFontButton", "ToggleButton", "ResetButton", "InformationLabel", "CustomFontFileDialog")]
+[node name="Translator" type="Node" parent="." node_paths=PackedStringArray("SourceLanguageModelDropdown", "CaptureIntervalSlider", "TranslationServiceDropdown", "SourceLanguageDropdown", "TargetLanguageDropdown", "SeeNativeNamesButton", "CustomFontButton", "ToggleButton", "ResetButton", "InformationLabel", "CustomFontFileDialog")]
 script = ExtResource("1_fanm5")
 SourceLanguageModelDropdown = NodePath("Configurations/SourceLanguageModel/Dropdown")
 CaptureIntervalSlider = NodePath("Configurations/CaptureInterval/SpinBox")
 TranslationServiceDropdown = NodePath("Configurations/TranslationService/Dropdown")
 SourceLanguageDropdown = NodePath("Configurations/SourceLanguage/Dropdown")
 TargetLanguageDropdown = NodePath("Configurations/TargetLanguage/Dropdown")
+SeeNativeNamesButton = NodePath("Configurations/SeeNativeNames/Toggle")
 CustomFontButton = NodePath("Configurations/CustomFont/Button")
 ToggleButton = NodePath("ToggleButton")
 ResetButton = NodePath("ResetButton")
@@ -27,9 +28,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -100.0
-offset_top = -110.0
+offset_top = -90.0
 offset_right = 100.0
-offset_bottom = -70.0
+offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Start"
@@ -287,6 +288,36 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 fit_to_longest_item = false
+
+[node name="SeeNativeNames" type="Panel" parent="Translator/Configurations"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="Translator/Configurations/SeeNativeNames"]
+auto_translate_mode = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "See Native Names"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Toggle" type="CheckButton" parent="Translator/Configurations/SeeNativeNames"]
+auto_translate_mode = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
 
 [node name="Separator2" type="HSeparator" parent="Translator/Configurations"]
 auto_translate_mode = 1

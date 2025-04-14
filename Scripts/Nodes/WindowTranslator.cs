@@ -15,6 +15,7 @@ public partial class WindowTranslator : Node {
     [Export] public OptionButton TranslationServiceDropdown { get; set; }
     [Export] public OptionButton SourceLanguageDropdown { get; set; }
     [Export] public OptionButton TargetLanguageDropdown { get; set; }
+    [Export] public CheckButton SeeNativeNamesButton { get; set; }
     [Export] public Button CustomFontButton { get; set; }
     [Export] public Button ToggleButton { get; set; }
     [Export] public Button ResetButton { get; set; }
@@ -45,8 +46,8 @@ public partial class WindowTranslator : Node {
         // Setup controls
         FillSourceLanguageModelDropdown();
         FillTranslationServiceDropdown();
-        FillSourceLanguageDropdown();
-        FillTargetLanguageDropdown();
+        FillSourceLanguageDropdown(SeeNativeNamesButton.ButtonPressed);
+        FillTargetLanguageDropdown(SeeNativeNamesButton.ButtonPressed);
         SetTranslationService();
         RenderInformationLabel();
 
@@ -56,6 +57,7 @@ public partial class WindowTranslator : Node {
         ToggleButton.Pressed += Toggle;
         ResetButton.Pressed += Reset;
         CustomFontFileDialog.FileSelected += SetCustomFont;
+        SeeNativeNamesButton.Pressed += SetSeeNativeNames;
     }
     public override void _Process(double Delta) {
         // Capture screen every interval
@@ -104,11 +106,17 @@ public partial class WindowTranslator : Node {
     private void FillSourceLanguageModelDropdown() {
         FillDropdown(SourceLanguageModelDropdown, OCRUtility.GetAvailableLanguages());
     }
-    private void FillSourceLanguageDropdown() {
-        FillDropdown(SourceLanguageDropdown, [.. Language.LanguageDictionary.Values.Select(Language => Language.Name)], "Japanese");
+    private void FillSourceLanguageDropdown(bool NativeNames) {
+        FillDropdown(SourceLanguageDropdown,
+            Language.LanguageDictionary.Values.Select(Language => NativeNames ? Language.NativeName : Language.Name).Order(),
+            NativeNames ? "日本語" : "Japanese"
+        );
     }
-    private void FillTargetLanguageDropdown() {
-        FillDropdown(TargetLanguageDropdown, [.. Language.LanguageDictionary.Values.Select(Language => Language.Name)], "English");
+    private void FillTargetLanguageDropdown(bool NativeNames) {
+        FillDropdown(TargetLanguageDropdown,
+            Language.LanguageDictionary.Values.Select(Language => NativeNames ? Language.NativeName : Language.Name).Order(),
+            "English"
+        );
     }
     private void FillTranslationServiceDropdown() {
         // Fill dropdown with translation services
@@ -164,6 +172,10 @@ public partial class WindowTranslator : Node {
         Font.LoadDynamicFont(FilePath);
         // Set default font
         MainTheme.DefaultFont = Font;
+    }
+    private void SetSeeNativeNames() {
+        FillSourceLanguageDropdown(SeeNativeNamesButton.ButtonPressed);
+        FillTargetLanguageDropdown(SeeNativeNamesButton.ButtonPressed);
     }
     private void ClearOverlayWindow() {
         // Prevent current capture from overlaying
