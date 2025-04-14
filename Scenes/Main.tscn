@@ -21,17 +21,31 @@ CustomFontFileDialog = NodePath("CustomFontFileDialog")
 MainTheme = ExtResource("2_vyaov")
 
 [node name="ToggleButton" type="Button" parent="Translator"]
-offset_left = 380.0
-offset_top = 430.0
-offset_right = 580.0
-offset_bottom = 470.0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -110.0
+offset_right = 100.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 0
 text = "Start"
 
 [node name="ResetButton" type="Button" parent="Translator"]
-offset_left = 820.0
-offset_top = 495.0
-offset_right = 950.0
-offset_bottom = 530.0
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -45.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
 text = "Reset"
 
 [node name="InformationLabel" type="RichTextLabel" parent="Translator"]
@@ -44,10 +58,14 @@ Translated: 0"
 
 [node name="CreditsLabel" type="RichTextLabel" parent="Translator"]
 auto_translate_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 10.0
-offset_top = 370.0
+offset_top = -150.0
 offset_right = 210.0
-offset_bottom = 535.0
+offset_bottom = -10.0
+grow_vertical = 0
 theme_override_font_sizes/normal_font_size = 11
 bbcode_enabled = true
 text = "By Joyless
@@ -63,19 +81,27 @@ KitzuGG (Mouse Passthrough)
 Dezgo (Icon)"
 
 [node name="Icon" type="TextureRect" parent="Translator"]
-offset_left = 870.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -90.0
 offset_top = 10.0
-offset_right = 950.0
+offset_right = -10.0
 offset_bottom = 90.0
+grow_horizontal = 0
 texture = ExtResource("3_7q6xx")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="Title" type="RichTextLabel" parent="Translator"]
-offset_left = 865.0
-offset_top = 95.0
-offset_right = 955.0
-offset_bottom = 145.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -95.0
+offset_top = 100.0
+offset_right = -5.0
+offset_bottom = 150.0
+grow_horizontal = 0
 bbcode_enabled = true
 text = "[center]Saikou
 Translate"
@@ -90,10 +116,17 @@ access = 2
 use_native_dialog = true
 
 [node name="Configurations" type="VBoxContainer" parent="Translator"]
-offset_left = 280.0
-offset_top = 70.0
-offset_right = 680.0
-offset_bottom = 420.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="SourceLanguageModel" type="Panel" parent="Translator/Configurations"]
@@ -101,18 +134,26 @@ custom_minimum_size = Vector2(400, 40)
 layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/SourceLanguageModel"]
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Source Language Model"
+text = "Source Language Model"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Dropdown" type="OptionButton" parent="Translator/Configurations/SourceLanguageModel"]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 fit_to_longest_item = false
 
@@ -123,18 +164,26 @@ layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/CaptureInterval"]
 auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Capture Interval"
+text = "Capture Interval"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="SpinBox" type="SpinBox" parent="Translator/Configurations/CaptureInterval"]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 min_value = 0.1
 max_value = 10.0
 step = 0.1
@@ -153,19 +202,27 @@ layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/TranslationService"]
 auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Translation Service"
+text = "Translation Service"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Dropdown" type="OptionButton" parent="Translator/Configurations/TranslationService"]
 auto_translate_mode = 1
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 fit_to_longest_item = false
 
@@ -176,19 +233,27 @@ layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/SourceLanguage"]
 auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Source Language"
+text = "Source Language"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Dropdown" type="OptionButton" parent="Translator/Configurations/SourceLanguage"]
 auto_translate_mode = 1
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 fit_to_longest_item = false
 
@@ -199,19 +264,27 @@ layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/TargetLanguage"]
 auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Target Language"
+text = "Target Language"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Dropdown" type="OptionButton" parent="Translator/Configurations/TargetLanguage"]
 auto_translate_mode = 1
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 fit_to_longest_item = false
 
@@ -226,17 +299,25 @@ layout_mode = 2
 
 [node name="Label" type="RichTextLabel" parent="Translator/Configurations/CustomFont"]
 auto_translate_mode = 1
-layout_mode = 0
-offset_top = 5.0
-offset_right = 200.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -200.0
+grow_horizontal = 2
+grow_vertical = 2
 bbcode_enabled = true
-text = "[center]Custom Font"
+text = "Custom Font"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Button" type="Button" parent="Translator/Configurations/CustomFont"]
 auto_translate_mode = 1
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 200.0
-offset_right = 400.0
-offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
 text_overrun_behavior = 3
