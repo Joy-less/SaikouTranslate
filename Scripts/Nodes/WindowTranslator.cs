@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
 using Godot;
+using GodotTask;
 using GTranslate;
 using GTranslate.Translators;
 using ZiggyCreatures.Caching.Fusion;
@@ -48,6 +48,7 @@ public partial class WindowTranslator : Node {
         FillSourceLanguageDropdown();
         FillTargetLanguageDropdown();
         SetTranslationService();
+        RenderInformationLabel();
 
         // Connect events
         TranslationServiceDropdown.ItemSelected += _ => SetTranslationService();
@@ -57,12 +58,6 @@ public partial class WindowTranslator : Node {
         CustomFontFileDialog.FileSelected += SetCustomFont;
     }
     public override void _Process(double Delta) {
-        // Log translator information
-        InformationLabel.Text = $"""
-            Recognised: {RecognisedCount}
-            Translated: {TranslatedCount}
-            """;
-        
         // Capture screen every interval
         if (Started && !Capturing) {
             TimeUntilCapture -= Delta;
@@ -178,7 +173,14 @@ public partial class WindowTranslator : Node {
             }
         }
     }
-    private async Task CaptureAsync() {
+    private void RenderInformationLabel() {
+        // Log translator information
+        InformationLabel.Text = $"""
+            Recognised: {RecognisedCount}
+            Translated: {TranslatedCount}
+            """;
+    }
+    private async GDTask CaptureAsync() {
         if (Capturing) return;
         Capturing = true;
 
@@ -188,16 +190,16 @@ public partial class WindowTranslator : Node {
             // Get chosen source language model for OCR
             string SourceLanguageModel = SourceLanguageModelDropdown.GetItemText(SourceLanguageModelDropdown.Selected);
             // Recognise page from foreground window
-            using TesseractOCR.Page Page = await Task.Run(() => OCRUtility.Recognise(ForegroundWindowHandle, SourceLanguageModel));
+            using TesseractOCR.Page Page = await GDTask.RunOnThreadPool(() => OCRUtility.Recognise(ForegroundWindowHandle, SourceLanguageModel));
             // Recognise paragraphs from page
-            IEnumerable<TesseractOCR.Layout.Paragraph> Paragraphs = await Task.Run(() => Page.Layout.SelectMany(Block => Block.Paragraphs));
+            IEnumerable<TesseractOCR.Layout.Paragraph> Paragraphs = await GDTask.RunOnThreadPool(() => Page.Layout.SelectMany(Block => Block.Paragraphs));
 
             // Get rect of foreground window
             Rect2I ForegroundWindowRect = CaptureUtility.GetWindowRect2I(ForegroundWindowHandle);
 
             // Create labels for each recognition
             List<Label> Overlays = [];
-            await Task.Run(() => {
+            await GDTask.RunOnThreadPool(() => {
                 foreach (TesseractOCR.Layout.Paragraph Paragraph in Paragraphs) {
                     // Ensure bounds available
                     if (Paragraph.BoundingBox is not TesseractOCR.Rect BlockRect) {
@@ -210,6 +212,7 @@ public partial class WindowTranslator : Node {
                         Size = new Vector2(BlockRect.Width, BlockRect.Height),
                     };
                     RecognisedCount += Overlay.Text.Length;
+                    CallDeferred(MethodName.RenderInformationLabel);
                     // Style overlay label
                     Overlay.AddThemeColorOverride(StringNames.FontOutlineColor, new Color(0, 0, 0));
                     Overlay.AddThemeConstantOverride(StringNames.OutlineSize, 10);
@@ -227,14 +230,15 @@ public partial class WindowTranslator : Node {
             string TargetLanguage = TargetLanguageDropdown.GetItemText(TargetLanguageDropdown.Selected);
             // Translate each label
             if (Translator is not null) {
-                List<Task> TranslateTasks = [];
+                List<GDTask> TranslateTasks = [];
                 foreach (Label Overlay in Overlays) {
                     // Translate label
-                    async Task TranslateLabelAsync() {
+                    async GDTask TranslateLabelAsync() {
                         // Try get translation from cache
                         string Translation = await TranslationCache.GetOrSetAsync(Overlay.Text, async CancelToken => {
                             // Otherwise, request translation
                             TranslatedCount += Overlay.Text.Length;
+                            CallDeferred(MethodName.RenderInformationLabel);
                             return (await Translator.TranslateAsync(Overlay.Text, TargetLanguage, SourceLanguage)).Translation;
                         });
                         // Set text to translation
@@ -243,7 +247,7 @@ public partial class WindowTranslator : Node {
                     TranslateTasks.Add(TranslateLabelAsync());
                 }
                 // Wait for all translations to complete
-                await Task.WhenAll(TranslateTasks);
+                await GDTask.WhenAll(TranslateTasks);
             }
 
             // Ensure this is still the latest capture
