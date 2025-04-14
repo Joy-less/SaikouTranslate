@@ -211,6 +211,7 @@ public partial class WindowTranslator : Node {
                         Position = new Vector2(BlockRect.X1, BlockRect.Y1) + ForegroundWindowRect.Position,
                         Size = new Vector2(BlockRect.Width, BlockRect.Height),
                     };
+                    // Increment recognised counter
                     RecognisedCount += Overlay.Text.Length;
                     CallDeferred(MethodName.RenderInformationLabel);
                     // Style overlay label
@@ -237,9 +238,12 @@ public partial class WindowTranslator : Node {
                         // Try get translation from cache
                         string Translation = await TranslationCache.GetOrSetAsync(Overlay.Text, async CancelToken => {
                             // Otherwise, request translation
+                            string Translation = (await Translator.TranslateAsync(Overlay.Text, TargetLanguage, SourceLanguage)).Translation;
+                            // Increment translated counter
                             TranslatedCount += Overlay.Text.Length;
                             CallDeferred(MethodName.RenderInformationLabel);
-                            return (await Translator.TranslateAsync(Overlay.Text, TargetLanguage, SourceLanguage)).Translation;
+                            // Return new translation
+                            return Translation;
                         });
                         // Set text to translation
                         Overlay.Text = Translation;
