@@ -5,7 +5,7 @@ using System.Runtime.Versioning;
 
 [SupportedOSPlatform("Windows")]
 public sealed class OCRUtility {
-    public string DataDirectory = "OCR";
+    public string DataDirectory { get; set; } = "OCR";
 
     private TesseractOCR.Engine? Engine;
 
@@ -22,9 +22,8 @@ public sealed class OCRUtility {
         return Recognise(WindowCapture, Language);
     }
     public string[] GetAvailableLanguages() {
-        return Directory.GetFiles(DataDirectory)
+        return [.. Directory.GetFiles(DataDirectory)
             .Where(File => Path.GetExtension(File).Equals(".traineddata", System.StringComparison.InvariantCultureIgnoreCase))
-            .Select(File => Path.GetFileNameWithoutExtension(File))
-            .ToArray();
+            .Select(File => Path.GetFileNameWithoutExtension(File))];
     }
 }

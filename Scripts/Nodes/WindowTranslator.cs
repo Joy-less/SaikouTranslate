@@ -10,25 +10,25 @@ using ZiggyCreatures.Caching.Fusion;
 
 [SupportedOSPlatform("Windows")]
 public partial class WindowTranslator : Node {
-    [Export] OptionButton SourceLanguageModelDropdown;
-    [Export] SpinBox CaptureIntervalSlider;
-    [Export] OptionButton TranslationServiceDropdown;
-    [Export] OptionButton SourceLanguageDropdown;
-    [Export] OptionButton TargetLanguageDropdown;
-    [Export] Button CustomFontButton;
-    [Export] Button ToggleButton;
-    [Export] Button ResetButton;
-    [Export] RichTextLabel InformationLabel;
-    [Export] FileDialog CustomFontFileDialog;
-    [Export] Theme MainTheme;
+    [Export] public OptionButton SourceLanguageModelDropdown { get; set; }
+    [Export] public SpinBox CaptureIntervalSlider { get; set; }
+    [Export] public OptionButton TranslationServiceDropdown { get; set; }
+    [Export] public OptionButton SourceLanguageDropdown { get; set; }
+    [Export] public OptionButton TargetLanguageDropdown { get; set; }
+    [Export] public Button CustomFontButton { get; set; }
+    [Export] public Button ToggleButton { get; set; }
+    [Export] public Button ResetButton { get; set; }
+    [Export] public RichTextLabel InformationLabel { get; set; }
+    [Export] public FileDialog CustomFontFileDialog { get; set; }
+    [Export] public Theme MainTheme { get; set; }
 
     public readonly Dictionary<string, ITranslator?> Translators = new() {
-        {"Disabled", null},
-        {"Any", new AggregateTranslator()},
-        {"Google", new GoogleTranslator()},
-        {"Bing", new BingTranslator()},
-        {"Yandex", new YandexTranslator()},
-        {"Microsoft", new MicrosoftTranslator()},
+        ["Disabled"] = null,
+        ["Any"] = new AggregateTranslator(),
+        ["Google"] = new GoogleTranslator(),
+        ["Bing"] = new BingTranslator(),
+        ["Yandex"] = new YandexTranslator(),
+        ["Microsoft"] = new MicrosoftTranslator(),
     };
 
     private readonly OCRUtility OCRUtility = new();
@@ -110,10 +110,10 @@ public partial class WindowTranslator : Node {
         FillDropdown(SourceLanguageModelDropdown, OCRUtility.GetAvailableLanguages());
     }
     private void FillSourceLanguageDropdown() {
-        FillDropdown(SourceLanguageDropdown, Language.LanguageDictionary.Values.Select(Language => Language.Name).ToArray(), "Japanese");
+        FillDropdown(SourceLanguageDropdown, [.. Language.LanguageDictionary.Values.Select(Language => Language.Name)], "Japanese");
     }
     private void FillTargetLanguageDropdown() {
-        FillDropdown(TargetLanguageDropdown, Language.LanguageDictionary.Values.Select(Language => Language.Name).ToArray(), "English");
+        FillDropdown(TargetLanguageDropdown, [.. Language.LanguageDictionary.Values.Select(Language => Language.Name)], "English");
     }
     private void FillTranslationServiceDropdown() {
         // Fill dropdown with translation services
