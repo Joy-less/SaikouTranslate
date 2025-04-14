@@ -2,7 +2,6 @@ using Godot;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-#pragma warning disable CA1806
 #pragma warning disable SYSLIB1054
 
 // Credit to KitzuGG:
@@ -29,7 +28,7 @@ public static class WindowPassthroughUtility {
 			CurrentWindowStyle |= WS_EX_TRANSPARENT;
 			CurrentWindowStyle |= WS_EX_LAYERED;
 		}
-	    SetWindowLong(HWND, GWL_EXSTYLE, CurrentWindowStyle);
+	    _ = SetWindowLong(HWND, GWL_EXSTYLE, CurrentWindowStyle);
 	}
 	public static void SetWindowPassthrough(Window Window, bool Enable) {
 		SetWindowPassthrough(GetWindowHandle(Window.GetWindowId()), Enable);
