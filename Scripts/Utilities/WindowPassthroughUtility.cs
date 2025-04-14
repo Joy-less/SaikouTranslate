@@ -12,12 +12,12 @@ public static partial class WindowPassthroughUtility {
 	private const long WS_EX_LAYERED = 0x00080000L;
 
 	[LibraryImport("user32.dll")]
-	private static partial long GetWindowLong(int hWnd, int nIndex);
+	private static partial long GetWindowLongPtrA(nint hWnd, int nIndex);
 	[LibraryImport("user32.dll")]
-	private static partial int SetWindowLong(int hWnd, int nIndex, long dwNewLong);
+	private static partial nint SetWindowLongPtrA(nint hWnd, int nIndex, long dwNewLong);
 
-	public static void SetWindowPassthrough(int HWND, bool Enable) {
-		long CurrentWindowStyle = GetWindowLong(HWND, GWL_EXSTYLE);
+	public static void SetWindowPassthrough(nint HWND, bool Enable) {
+		long CurrentWindowStyle = GetWindowLongPtrA(HWND, GWL_EXSTYLE);
 		if (Enable) {
 			CurrentWindowStyle &= ~WS_EX_TRANSPARENT;
 			CurrentWindowStyle &= ~WS_EX_LAYERED;
@@ -26,12 +26,12 @@ public static partial class WindowPassthroughUtility {
 			CurrentWindowStyle |= WS_EX_TRANSPARENT;
 			CurrentWindowStyle |= WS_EX_LAYERED;
 		}
-	    _ = SetWindowLong(HWND, GWL_EXSTYLE, CurrentWindowStyle);
+	    SetWindowLongPtrA(HWND, GWL_EXSTYLE, CurrentWindowStyle);
 	}
 	public static void SetWindowPassthrough(Window Window, bool Enable) {
 		SetWindowPassthrough(GetWindowHandle(Window.GetWindowId()), Enable);
 	}
-	public static int GetWindowHandle(int WindowId) {
-		return (int)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, WindowId);
+	public static nint GetWindowHandle(int WindowId) {
+		return (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, WindowId);
 	}
 }
